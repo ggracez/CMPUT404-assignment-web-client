@@ -31,6 +31,8 @@ class HTTPResponse(object):
     def __init__(self, code=200, body=""):
         self.code = code
         self.body = body
+    def __str__(self):
+        return f"HTTP/1.1 {self.code}\n{self.body}"
 
 class HTTPClient(object):
     def get_host_port(self,url):
@@ -86,13 +88,18 @@ class HTTPClient(object):
         host, port = self.get_host_port(url)
         path = self.get_path(url)
         
-        self.connect(host, port)
+        try:
+            self.connect(host, port)
+        except:
+            # perhaps 500 is better here but this error also gets returned when the 
+            # url does not exist (which is a part of the requirements) so i'll keep it like this
+            return HTTPResponse(404)
         
-        headers = f"GET {path} HTTP/1.1\r\n"
-        headers += f"Host: {host}\r\n"
-        headers += f"Connection: close\r\n"
-        headers += f"\r\n"
-        self.sendall(headers)
+        request = f"GET {path} HTTP/1.1\r\n"
+        request += f"Host: {host}\r\n"
+        request += f"Connection: close\r\n"
+        request += f"\r\n"
+        self.sendall(request)
         
         data = self.recvall(self.socket)
         self.socket.close()
@@ -106,7 +113,10 @@ class HTTPClient(object):
         host, port = self.get_host_port(url)
         path = self.get_path(url)
         
-        self.connect(host, port)
+        try:
+            self.connect(host, port)
+        except:
+            return HTTPResponse(404)
         
         params = ""
         if args is not None:
@@ -115,14 +125,14 @@ class HTTPClient(object):
                 param_list.append(i + "=" + args[i])
             params += "&".join(param_list)
         
-        headers = f"POST {path} HTTP/1.1\r\n"
-        headers += f"Host: {host}\r\n"
-        headers += f"Content-Type: application/x-www-form-urlencoded\r\n"
-        headers += f"Content-Length: {len(params)}\r\n"
-        headers += f"Connection: close\r\n"
-        headers += f"\r\n"
-        headers += f"{params}"
-        self.sendall(headers)
+        request = f"POST {path} HTTP/1.1\r\n"
+        request += f"Host: {host}\r\n"
+        request += f"Content-Type: application/x-www-form-urlencoded\r\n"
+        request += f"Content-Length: {len(params)}\r\n"
+        request += f"Connection: close\r\n"
+        request += f"\r\n"
+        request += f"{params}"
+        self.sendall(request)
         
         data = self.recvall(self.socket)
         self.socket.close()
