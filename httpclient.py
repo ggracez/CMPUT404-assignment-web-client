@@ -88,6 +88,9 @@ class HTTPClient(object):
         host, port = self.get_host_port(url)
         path = self.get_path(url)
         
+        if urlparse(url).scheme != "http":
+            return HTTPResponse(400)
+        
         try:
             self.connect(host, port)
         except:
@@ -112,6 +115,9 @@ class HTTPClient(object):
     def POST(self, url, args=None):
         host, port = self.get_host_port(url)
         path = self.get_path(url)
+        
+        if urlparse(url).scheme != "http":
+            return HTTPResponse(400)
         
         try:
             self.connect(host, port)
