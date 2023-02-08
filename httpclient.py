@@ -84,6 +84,15 @@ class HTTPClient(object):
                 done = not part
         return buffer.decode('utf-8')
 
+    def get_args(self, args):
+        params = ""
+        if args is not None:
+            param_list = []
+            for i in args.keys():
+                param_list.append(i + "=" + args[i])
+            params += "&".join(param_list)
+        return params
+        
     def GET(self, url, args=None):      
         host, port = self.get_host_port(url)
         path = self.get_path(url)
@@ -98,10 +107,13 @@ class HTTPClient(object):
             # url does not exist (which is a part of the requirements) so i'll keep it like this
             return HTTPResponse(404)
         
+        params = self.get_args(args)
+        
         request = f"GET {path} HTTP/1.1\r\n"
         request += f"Host: {host}\r\n"
         request += f"Connection: close\r\n"
         request += f"\r\n"
+        request += f"{params}"
         self.sendall(request)
         
         data = self.recvall(self.socket)
@@ -124,12 +136,7 @@ class HTTPClient(object):
         except:
             return HTTPResponse(404)
         
-        params = ""
-        if args is not None:
-            param_list = []
-            for i in args.keys():
-                param_list.append(i + "=" + args[i])
-            params += "&".join(param_list)
+        params = self.get_args(args)
         
         request = f"POST {path} HTTP/1.1\r\n"
         request += f"Host: {host}\r\n"
